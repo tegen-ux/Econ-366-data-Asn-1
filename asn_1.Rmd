@@ -20,17 +20,25 @@ library(viridis)
 
 ```
 
+```{r download data-}
+if (!file.exists('can_net_zero.csv'))
+    download.file("https://www.cer-rec.gc.ca/open/energy/energyfutures2023/benchmark-prices-2023.csv",destfile =  'can_net_zero.csv',mode = "wb")
 
-```{r cars}
-summary(cars)
+can_net_zero<-read_csv("can_net_zero.csv")%>%clean_names()
 ```
+```{r deliverable 1}
+wcs_data<-can_net_zero%>%filter(variable=="Western Canadian Select (WCS) - 2022 US$/bbl")%>%
+  filter(year%%5==0)%>%
+  filter(scenario=="Canada Net-zero")%>%
+  select(year,value)%>%
+  filter(year>=2020)%>% mutate(value = round(value, 2))#%>%
+  #mutate(value=as.numeric(value))
+  
 
-## Including Plots
 
-You can also embed plots, for example:
+wcs_data %>%
+  kbl(escape = FALSE,table.attr = "style='width:80%;'",digits=2,align=rep('c', 2)) %>%
+  kable_styling(fixed_thead = T,bootstrap_options = c("hover", "condensed","responsive"),full_width = T)%>%
+  add_header_above(header = c("Western Canada Select (WCS) prices in the Canada Net-Zero scenario of the Canadian Energy Regulator's Canada's Energy Future (2023) report"=2))
 
-```{r pressure, echo=FALSE}
-plot(pressure)
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
