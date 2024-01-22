@@ -31,11 +31,9 @@ wcs_data<-can_net_zero%>%filter(variable=="Western Canadian Select (WCS) - 2022 
   filter(year%%5==0)%>%
   filter(scenario=="Canada Net-zero")%>%
   select(year,value)%>%
-  filter(year>=2020)%>% mutate(value = round(value, 2))#%>%
-  #mutate(value=as.numeric(value))
+  filter(year>=2020)%>% mutate(value = round(value, 2))
+
   
-
-
 wcs_data %>%
   kbl(escape = FALSE,table.attr = "style='width:80%;'",digits=2,align=rep('c', 2)) %>%
   kable_styling(fixed_thead = T,bootstrap_options = c("hover", "condensed","responsive"),full_width = T)%>%
