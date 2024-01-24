@@ -41,7 +41,8 @@ wcs_data<-can_net_zero%>%filter(variable=="Western Canadian Select (WCS) - 2022 
   filter(year%%5==0)%>%
   filter(scenario=="Canada Net-zero")%>%
   select(year,value)%>%
-  filter(year>=2020)%>% mutate(value = round(value, 2))
+  filter(year>=2020)%>%
+  mutate(value = round(value, 2))
 
   
 wcs_data %>%
@@ -52,14 +53,20 @@ wcs_data %>%
 ## Deliverable 2 
 
 
-```{r, out.width="95%",dpi=300,fig.align="center"}
+```{r fig.align="center", message=TRUE, warning=TRUE, dpi=300, out.width="95%"}
 #your code here (I set it up to make a nice image for you)
+net_zero_vals <- can_net_zero %>%
+  filter(scenario == "Global Net-zero") %>%
+  filter(variable %in% c("Brent - 2022 US$/bbl", "West Texas Intermediate (WTI) - 2022 US$/bbl", "Western Canadian Select (WCS) - 2022 US$/bbl")) %>%
+  select(year, value, variable) %>%
+  mutate(value = round(value, digits = 2)) %>%
+  mutate(variable = case_when(
+    startsWith(variable, "Brent - 2022 US$/bbl") ~ "Brent",
+    startsWith(variable, "West Texas Intermediate (WTI) - 2022 US$/bbl") ~ "West Texas Intermediate (WTI)",
+    startsWith(variable, "Western Canadian Select (WCS) - 2022 US$/bbl") ~ "Western Canadian Select (WCS)",
+    TRUE ~ variable
+  ))
 
-#this is just to show you that the graph output will work
-ggplot(mtcars, aes(x=hp, y=mpg, color=as.factor(cyl))) +
-    geom_point(size=3)+
-    scale_color_brewer("Cylinders")
-    
 
 
 ```
