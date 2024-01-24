@@ -1,0 +1,93 @@
+---
+title: "Econ 366, Data Assignment 1"
+author: "Tegen Hilker Readman"
+editor: source
+---
+
+
+
+```{r chunks,echo=T,output=F, warning=FALSE,include=FALSE}
+knitr::opts_chunk$set(message=F,
+                      warning=F,
+                      include=T)
+# include all your code, but not warnings or loading messages in your output
+```
+
+
+```{r packages-data,echo=T,output=F, warning=FALSE,include=T}
+#load your packages
+library(kableExtra)
+library(readxl)
+library(janitor)
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(viridis)
+```
+
+
+## Downloading the data
+
+```{r download data-}
+if (!file.exists('can_net_zero.csv'))
+    download.file("https://www.cer-rec.gc.ca/open/energy/energyfutures2023/benchmark-prices-2023.csv",destfile =  'can_net_zero.csv',mode = "wb")
+
+can_net_zero<-read_csv("can_net_zero.csv")%>%clean_names()
+```
+## Deliverable 1 
+
+```{r deliverable 1}
+wcs_data<-can_net_zero%>%filter(variable=="Western Canadian Select (WCS) - 2022 US$/bbl")%>%
+  filter(year%%5==0)%>%
+  filter(scenario=="Canada Net-zero")%>%
+  select(year,value)%>%
+  filter(year>=2020)%>% mutate(value = round(value, 2))
+
+  
+wcs_data %>%
+  kbl(escape = FALSE,table.attr = "style='width:80%;'",digits=2,align=rep('c', 2)) %>%
+  kable_styling(fixed_thead = T,bootstrap_options = c("hover", "condensed","responsive"),full_width = T)%>%
+  add_header_above(header = c("Western Canada Select (WCS) prices in the Canada Net-Zero scenario of the Canadian Energy Regulator's Canada's Energy Future (2023) report"=2))
+```
+## Deliverable 2 
+
+
+```{r, out.width="95%",dpi=300,fig.align="center"}
+#your code here (I set it up to make a nice image for you)
+
+#this is just to show you that the graph output will work
+ggplot(mtcars, aes(x=hp, y=mpg, color=as.factor(cyl))) +
+    geom_point(size=3)+
+    scale_color_brewer("Cylinders")
+    
+
+
+```
+
+## Deliverable 3 
+
+
+```{r, out.width="95%",dpi=300,fig.align="center"}
+#your code here (I set it up to make a nice image for you)
+
+
+```
+
+
+
+## Deliverable 4 
+
+You can just type here. It will format it nicely enough for these purposes. Be careful with plagiarism: I want your own words, and you should not need to use more than the CER report as your source document.
+
+
+## Deliverable 5 (Your graph to support deliverable 4)
+
+```{r, out.width="95%",dpi=300,fig.align="center"}
+#your code here (I set it up to make a nice image for you)
+
+
+```
+
+
+
+
