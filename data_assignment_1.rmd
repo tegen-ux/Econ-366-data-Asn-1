@@ -7,9 +7,9 @@ editor: source
 
 
 ```{r chunks,echo=T,output=F, warning=FALSE,include=FALSE}
-knitr::opts_chunk$set(message=F,
-                      warning=F,
-                      include=T)
+knitr::opts_chunk$set(message = F,
+                      warning = F,
+                      include = T)
 # include all your code, but not warnings or loading messages in your output
 ```
 
@@ -30,25 +30,52 @@ library(viridis)
 
 ```{r download data-}
 if (!file.exists('can_net_zero.csv'))
-    download.file("https://www.cer-rec.gc.ca/open/energy/energyfutures2023/benchmark-prices-2023.csv",destfile =  'can_net_zero.csv',mode = "wb")
+  download.file(
+    "https://www.cer-rec.gc.ca/open/energy/energyfutures2023/benchmark-prices-2023.csv",
+    destfile =  'can_net_zero.csv',
+    mode = "wb"
+  )
 
-can_net_zero<-read_csv("can_net_zero.csv")%>%clean_names()
+can_net_zero<-read_csv("can_net_zero.csv")%>%clean_names(
+)
 ```
 ## Deliverable 1 
 
 ```{r deliverable 1}
-wcs_data<-can_net_zero%>%filter(variable=="Western Canadian Select (WCS) - 2022 US$/bbl")%>%
-  filter(year%%5==0)%>%
-  filter(scenario=="Canada Net-zero")%>%
-  select(year,value)%>%
-  filter(year>=2020)%>%
+wcs_data <-
+  can_net_zero %>% filter(variable == "Western Canadian Select (WCS) - 2022 US$/bbl") %>%
+  filter(year %% 5 == 0) %>%
+  filter(scenario == "Canada Net-zero") %>%
+  select(year, value) %>%
+  filter(year >= 2020) %>%
   mutate(value = round(value, 2))
 
-  
+
 wcs_data %>%
-  kbl(escape = FALSE,table.attr = "style='width:80%;'",digits=2,align=rep('c', 2)) %>%
-  kable_styling(fixed_thead = T,bootstrap_options = c("hover", "condensed","responsive"),full_width = T)%>%
-  add_header_above(header = c("Western Canada Select (WCS) prices in the Canada Net-Zero scenario of the Canadian Energy Regulator's Canada's Energy Future (2023) report"=2))
+  kbl(
+    escape = FALSE,
+    table.attr = "style='width:100%;'",
+    digits = 2,
+    align = rep('c', 2),
+    col.names = c("Year", "Price ($US 2022/bbl)") 
+    #https://stackoverflow.com/questions/51432502/replace-column-names-in-kable-r-markdown
+    #Basically for some stuff I used from stack overflow or I had to google, I just post the link to where I found the solution, I am not sure if you wanted/needed it but the cs student mentality comes out when I code (besides showering, sometimes it feels like I am the only one that does in my cs classes)
+  ) %>% 
+  kable_styling(
+    fixed_thead = T,
+    bootstrap_options = c("hover", "stripped", "condensed", "responsive"),
+    full_width = T
+  ) %>%
+  add_header_above(
+    header = c(
+      "Western Canada Select (WCS) prices in the Canada Net-Zero scenario of the Canadian Energy Regulator's Canada's Energy Future (2023) report" = 2
+    )
+  ) %>%
+  column_spec(1, width = "50%") %>%
+  column_spec(2, width = "50%") %>%
+#https://www.rdocumentation.org/packages/kableExtra/versions/1.3.4/topics/column_spec
+# I was having issues where the table looked super uneven so I used the column_spec argument
+  I()
 ```
 ## Deliverable 2 
 
@@ -57,17 +84,54 @@ wcs_data %>%
 #your code here (I set it up to make a nice image for you)
 net_zero_vals <- can_net_zero %>%
   filter(scenario == "Global Net-zero") %>%
-  filter(variable %in% c("Brent - 2022 US$/bbl", "West Texas Intermediate (WTI) - 2022 US$/bbl", "Western Canadian Select (WCS) - 2022 US$/bbl")) %>%
+  filter(
+    variable %in% c(
+      "Brent - 2022 US$/bbl",
+      "West Texas Intermediate (WTI) - 2022 US$/bbl",
+      "Western Canadian Select (WCS) - 2022 US$/bbl"
+    )
+  ) %>%
   select(year, value, variable) %>%
   mutate(value = round(value, digits = 2)) %>%
-  mutate(variable = case_when(
-    startsWith(variable, "Brent - 2022 US$/bbl") ~ "Brent",
-    startsWith(variable, "West Texas Intermediate (WTI) - 2022 US$/bbl") ~ "West Texas Intermediate (WTI)",
-    startsWith(variable, "Western Canadian Select (WCS) - 2022 US$/bbl") ~ "Western Canadian Select (WCS)",
-    TRUE ~ variable
-  ))
+  mutate(
+    variable = recode(
+      variable,
+      "Brent - 2022 US$/bbl" = "Brent",
+      "West Texas Intermediate (WTI) - 2022 US$/bbl" = "West Texas Intermediate (WTI)",
+      "Western Canadian Select (WCS) - 2022 US$/bbl" = "Western Canadian Select (WCS)"
+    )
+  )
+
+#https://www.statology.org/dplyr-replace-multiple-values/
+#I was having issues using your method to get rid of the "-2022...", it worked for Brent but it not would pass through for the other values, that's just the way she goes sometimes
 
 
+net_zero_vals %>% ggplot() +
+  geom_line(aes(year, value, group = variable, color = variable), linewidth =
+              1) +
+  expand_limits(y = c(0, 145)) +
+  scale_color_viridis(
+    "",
+    discrete = T,
+    option = "magma",
+    direction = -1,
+    begin = .7,
+    end = 0
+  ) +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm")) +
+  theme_minimal() +
+  scale_x_continuous(expand = c(0, 0.5), breaks = pretty_breaks()) + 
+  # I tried my best to make the 2050 marker not get cut off, but I found this solution by setting the expand to 0.5
+  scale_y_continuous(expand = c(0, 0), breaks = pretty_breaks()) +
+  theme(legend.position = "bottom") +
+  labs(
+    y = "Price (2022 US$/bbl)",
+    x = "",
+    title = "Crude Oil Prices, Global Net-zero Scenario",
+    caption = "Data via Canada Energy Regulator,Energy Futures (2023), Graph By Tegen Hilker Readman"
+  ) +
+  
+  NULL
 
 ```
 
@@ -76,23 +140,88 @@ net_zero_vals <- can_net_zero %>%
 
 ```{r, out.width="95%",dpi=300,fig.align="center"}
 #your code here (I set it up to make a nice image for you)
+scenarioData <- can_net_zero %>%
+  filter(variable == "Western Canadian Select (WCS) - 2022 US$/bbl") %>%
+  select(year, scenario, value) %>%
+  mutate(scenario = as_factor(scenario)) %>%
+  mutate(value = round(value, digits = 2))
 
+scenarioData %>%
+  ggplot() +
+  geom_line(aes(year, value, group = scenario, color = scenario), linewidth = 0.65) +
+  expand_limits(y = c(0, 110)) +
+  scale_color_viridis(
+    "",
+    discrete = TRUE,
+    option = "mako",
+    direction = -1,
+    begin = 0.7,
+    end = 0
+  ) +
+  scale_y_continuous(expand = c(0, 0), breaks = pretty_breaks()) +
+  scale_x_continuous(expand = c(0, .5), breaks = pretty_breaks()) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(
+    y = "Price (2022 US$/bbl)",
+    x = "",
+    title = "Western Canadian Select Crude Oil Prices",
+    subtitle = "Current Measures, Canada Net-zero, Global Net-zero Scenarios",
+    caption = "Data via Canada Energy Regulator, Energy Futures (2023), Graph By Tegen Hilker Readman"
+  ) +
+  NULL
 
 ```
 
 
 
 ## Deliverable 4 
+The "Canada's Energy Future 2023" report, detailed by the Canadian Energy Regulator, describes three scenarios: if Canada kept its current climate change measures if Canada goes net-zero by 2050 and similarly if the world followed suit. If Canada were to keep their current climate change measures, the CER predicts that while our emissions would be detrimental to the climate, the price of WCS futures would remain relatively constant to what it is now, ~ 60 $US/bbl. On the other hand, if we were to commit to net-zero emissions by 2050, i.e., where our emissions become negated by various technologies such as carbon capturing and "green" forms of energy, we would see the price of oil fall sharply, and even more, if the world went full net-zero. While that may look un-motivating for our economy, there would still be a small demand for petroleum products such as plastics and lubricants. We just would not be destroying the Earth with our emissions as much. What does this mean for Alberta? We should focus on other industries to prop up our economy rather than just relying on fossil fuels. A bonus is that with our increases in technology, the price for renewable energy will get lower over time. The graph below displays that: 
 
-You can just type here. It will format it nicely enough for these purposes. Be careful with plagiarism: I want your own words, and you should not need to use more than the CER report as your source document.
 
 
 ## Deliverable 5 (Your graph to support deliverable 4)
 
+
 ```{r, out.width="95%",dpi=300,fig.align="center"}
-#your code here (I set it up to make a nice image for you)
+#I know I went a bit overboard with the paragraph, I am really sorry. 
+if (!file.exists("renew_data.xslx"))
+  download.file(
+    "https://www.cer-rec.gc.ca/en/data-analysis/canada-energy-future/2023/figures.xlsx",
+    destfile = "renew_data.xslx",
+    mode = "wb"
+  )
 
+renewable_Data <-
+  read_excel("renew_data.xslx", sheet = "A.3", skip = 5) %>% clean_names()
 
+renewable_Data %>% mutate(data = round(data, digits = 2)) %>%
+  select(year, data, technology) %>%
+  ggplot() +
+  geom_line(aes(year, data, group = technology, color = technology),
+            linewidth = 0.7) +
+  scale_color_viridis(
+    "",
+    discrete = TRUE,
+    option = "rocket",
+    direction = -1,
+    begin = 0.7,
+    end = 0
+  ) +
+  scale_y_continuous(expand = c(0, .1), breaks = pretty_breaks()) +
+  scale_x_continuous(expand = c(0, .5), breaks = pretty_breaks()) +  
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(
+    y = "Capital cost trend index",
+    x = "Year",
+    title = "Capital cost trends for select technologies, Global Net-zero Scenario",
+    subtitle = "Based on 2021 = 1.00 ",
+    caption = "Data via Canada Energy Regulator, Energy Futures (2023), Graph By Tegen Hilker Readman"
+  ) +
+  
+  NULL
+#Also if you're wondering how why my function arguments look so segmented, I used the built in formater, I guess if you don't know about it, just select your code block then do -shift-Cmd-A
 ```
 
 
